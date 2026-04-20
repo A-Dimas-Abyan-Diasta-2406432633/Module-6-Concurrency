@@ -33,3 +33,10 @@ Demo tampilan commit 3:
 Di tahap ini saya tambahkan route `/sleep` yang sengaja menunda response selama 10 detik supaya efek server single-threaded bisa kelihatan. Secara fungsi, route ini memang sederhana karena tetap mengembalikan `hello.html`, tapi ada `thread::sleep(Duration::from_secs(10))` sebelum response dikirim. Justru bagian itu yang penting, karena dari sini kelihatan kalau satu request lambat bisa bikin request lain ikut nunggu. Waktu saya pahami alurnya, masuk akal kenapa ini terjadi: server sekarang masih memproses koneksi satu per satu di thread utama, jadi belum ada mekanisme buat menangani beberapa request sekaligus. Menurut saya milestone ini penting bukan karena fiturnya rumit, tapi karena dia menunjukkan bottleneck yang nyata dan jadi alasan kuat kenapa nanti perlu thread pool. Jadi sebelum masuk ke multithreading, saya sekarang lebih paham dulu masalah yang mau diselesaikan itu sebenarnya apa.
 
 </details>
+
+<details>
+<summary>Commit 5 Reflection Notes</summary>
+
+Di milestone ini bottleneck dari commit sebelumnya akhirnya ditangani dengan `ThreadPool`, jadi server tidak lagi memproses semua request di satu alur yang sama. Menurut saya bagian paling penting bukan cuma menambah thread, tapi membatasi jumlah thread lewat pool supaya server tetap punya kontrol dan tidak asal membuat thread baru untuk setiap koneksi. Waktu saya lihat strukturnya, saya jadi lebih paham kalau `execute` itu sebenarnya cuma mengirim job ke channel, lalu worker yang standby akan ambil dan menjalankannya. Dengan cara ini, request `/sleep` bisa ditangani oleh satu worker, sementara request biasa tetap bisa dikerjakan worker lain tanpa harus ikut menunggu 10 detik. Saya juga baru lebih kebayang kenapa `Arc<Mutex<Receiver<_>>>` dipakai, yaitu karena receiver-nya perlu dibagi ke banyak worker tapi tetap aman saat diakses bergantian. Jadi dibanding milestone 4, sekarang server terasa lebih masuk akal untuk menangani beberapa request sekaligus walaupun implementasinya masih sederhana.
+
+</details>
