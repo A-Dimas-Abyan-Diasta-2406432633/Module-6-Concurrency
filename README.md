@@ -15,3 +15,14 @@ Di tahap ini server akhirnya mengirim response yang benar ke browser, jadi hasil
 ![Commit 2 Demo](assets/images/commit2-demo.gif)
 
 </details>
+
+<details>
+<summary>Commit 3 Reflection Notes</summary>
+
+Di commit ini saya mulai validasi request line supaya server tidak selalu mengirim halaman yang sama untuk semua path. Sekarang saya ambil baris pertama request saja, lalu saya cocokkan apakah path yang diminta itu `/` atau bukan. Kalau cocok, server balikin `hello.html`, dan kalau tidak, server balikin `404.html` dengan status `404 NOT FOUND`. Menurut saya refactor ke bentuk `let (status_line, filename) = ...` itu penting karena logika pemilihan response jadi lebih ringkas dan tidak bikin duplikasi saat baca file lalu menyusun response HTTP. Sebelumnya alurnya terasa terlalu kaku karena semua request diperlakukan sama, padahal semestinya server bisa membedakan halaman valid dan halaman yang tidak ada. Dari milestone ini saya jadi lebih paham bahwa pemisahan antara penentuan response dan proses menulis response ke stream bikin kode lebih gampang dibaca dan lebih enak dikembangkan ke tahap berikutnya.
+
+Demo tampilan commit 3:
+
+![Commit 3 Demo](assets/images/commit3-demo.gif)
+
+</details>
