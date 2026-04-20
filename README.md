@@ -40,3 +40,10 @@ Di tahap ini saya tambahkan route `/sleep` yang sengaja menunda response selama 
 Di milestone ini bottleneck dari commit sebelumnya akhirnya ditangani dengan `ThreadPool`, jadi server tidak lagi memproses semua request di satu alur yang sama. Menurut saya bagian paling penting bukan cuma menambah thread, tapi membatasi jumlah thread lewat pool supaya server tetap punya kontrol dan tidak asal membuat thread baru untuk setiap koneksi. Waktu saya lihat strukturnya, saya jadi lebih paham kalau `execute` itu sebenarnya cuma mengirim job ke channel, lalu worker yang standby akan ambil dan menjalankannya. Dengan cara ini, request `/sleep` bisa ditangani oleh satu worker, sementara request biasa tetap bisa dikerjakan worker lain tanpa harus ikut menunggu 10 detik. Saya juga baru lebih kebayang kenapa `Arc<Mutex<Receiver<_>>>` dipakai, yaitu karena receiver-nya perlu dibagi ke banyak worker tapi tetap aman saat diakses bergantian. Jadi dibanding milestone 4, sekarang server terasa lebih masuk akal untuk menangani beberapa request sekaligus walaupun implementasinya masih sederhana.
 
 </details>
+
+<details>
+<summary>Commit Bonus Reflection Notes</summary>
+
+Di bonus ini saya ganti constructor `ThreadPool` dari `new` menjadi `build`, lalu saya pakai `Result` sebagai cara memberi tahu kalau input size tidak valid. Menurut saya ini lebih baik dibanding versi `new` sebelumnya karena `new` langsung panic saat size `0`, sedangkan `build` memberi kesempatan ke caller buat menangani error dengan lebih rapi. Secara perilaku, dua fungsi ini sama-sama dipakai untuk membuat thread pool, tapi pendekatannya beda: `new` cocok kalau kita yakin input selalu valid, sementara `build` lebih aman kalau kita mau desain API yang lebih defensif. Saya juga jadi lebih sadar bahwa perubahan kecil di level constructor bisa berpengaruh ke kualitas API secara keseluruhan, bukan cuma ke compile success. Dengan `build`, niat fungsi juga terasa lebih jelas karena proses pembuatan objek sekarang memang bisa gagal dan hal itu dinyatakan langsung di return type. Menurut saya ini versi yang lebih enak dipakai dan lebih masuk akal kalau proyeknya nanti berkembang.
+
+</details>

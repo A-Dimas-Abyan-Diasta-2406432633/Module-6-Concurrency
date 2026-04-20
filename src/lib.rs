@@ -1,4 +1,5 @@
 use std::{
+    fmt,
     sync::{mpsc, Arc, Mutex},
     thread,
 };
@@ -15,9 +16,26 @@ enum Message {
     Terminate,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum PoolCreationError {
+    ZeroSize,
+}
+
+impl fmt::Display for PoolCreationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PoolCreationError::ZeroSize => {
+                write!(f, "thread pool size must be greater than zero")
+            }
+        }
+    }
+}
+
 impl ThreadPool {
-    pub fn new(size: usize) -> ThreadPool {
-        assert!(size > 0);
+    pub fn build(size: usize) -> Result<ThreadPool, PoolCreationError> {
+        if size == 0 {
+            return Err(PoolCreationError::ZeroSize);
+        }
 
         let (sender, receiver) = mpsc::channel();
         let receiver = Arc::new(Mutex::new(receiver));
@@ -27,10 +45,10 @@ impl ThreadPool {
             workers.push(Worker::new(id, Arc::clone(&receiver)));
         }
 
-        ThreadPool {
+        Ok(ThreadPool {
             workers,
             sender: Some(sender),
-        }
+        })
     }
 
     pub fn execute<F>(&self, f: F)
@@ -89,5 +107,24 @@ impl Worker {
             _id: id,
             thread: Some(thread),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PoolCreationError, ThreadPool};
+
+    #[test]
+    fn build_returns_error_for_zero_size() {
+        let result = ThreadPool::build(0);
+
+        assert!(matches!(result, Err(PoolCreationError::ZeroSize)));
+    }
+
+    #[test]
+    fn build_returns_pool_for_valid_size() {
+        let result = ThreadPool::build(4);
+
+        assert!(result.is_ok());
     }
 }
