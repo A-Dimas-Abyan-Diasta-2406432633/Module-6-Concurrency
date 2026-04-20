@@ -26,3 +26,10 @@ Demo tampilan commit 3:
 ![Commit 3 Demo](assets/images/commit3-demo.gif)
 
 </details>
+
+<details>
+<summary>Commit 4 Reflection Notes</summary>
+
+Di tahap ini saya tambahkan route `/sleep` yang sengaja menunda response selama 10 detik supaya efek server single-threaded bisa kelihatan. Secara fungsi, route ini memang sederhana karena tetap mengembalikan `hello.html`, tapi ada `thread::sleep(Duration::from_secs(10))` sebelum response dikirim. Justru bagian itu yang penting, karena dari sini kelihatan kalau satu request lambat bisa bikin request lain ikut nunggu. Waktu saya pahami alurnya, masuk akal kenapa ini terjadi: server sekarang masih memproses koneksi satu per satu di thread utama, jadi belum ada mekanisme buat menangani beberapa request sekaligus. Menurut saya milestone ini penting bukan karena fiturnya rumit, tapi karena dia menunjukkan bottleneck yang nyata dan jadi alasan kuat kenapa nanti perlu thread pool. Jadi sebelum masuk ke multithreading, saya sekarang lebih paham dulu masalah yang mau diselesaikan itu sebenarnya apa.
+
+</details>
